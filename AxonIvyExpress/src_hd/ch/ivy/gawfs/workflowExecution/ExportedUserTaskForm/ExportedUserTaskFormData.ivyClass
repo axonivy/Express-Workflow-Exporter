@@ -1,0 +1,6 @@
+ExportedUserTaskFormData #class
+ch.ivy.gawfs.workflowExecution.ExportedUserTaskForm #namespace
+executePredefinedWorkflowData gawfs.ExecutePredefinedWorkflowData #field
+executePredefinedWorkflowData PERSISTENT #fieldModifier
+workingTask gawfs.TaskDef #field
+workingTask PERSISTENT #fieldModifier

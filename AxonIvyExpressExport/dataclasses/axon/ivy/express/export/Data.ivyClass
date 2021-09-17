@@ -1,0 +1,4 @@
+Data #class
+axon.ivy.express.export #namespace
+executePredefinedWorkflowData gawfs.ExecutePredefinedWorkflowData #field
+executePredefinedWorkflowData PERSISTENT #fieldModifier
