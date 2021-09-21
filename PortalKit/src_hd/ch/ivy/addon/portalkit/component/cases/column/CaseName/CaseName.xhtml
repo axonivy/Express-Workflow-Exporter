@@ -1,0 +1,23 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://xmlns.jcp.org/jsf/html"
+  xmlns:cc="http://xmlns.jcp.org/jsf/composite" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+  xmlns:p="http://primefaces.org/ui" xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<cc:interface componentType="IvyComponent">
+  <cc:attribute name="case" type="ch.ivyteam.ivy.workflow.ICase" />
+  <cc:attribute name="caseNameId" default="case-header-name-cell" />
+  <cc:attribute name="caseDescriptionId" default="description-cell" />
+  <cc:attribute name="dataModel" />
+  <cc:attribute name="descriptionId" default="description-cell" />
+  <cc:attribute name="nameStyleClass" />
+  <cc:attribute name="responsiveStyleClass" />
+</cc:interface>
+
+<cc:implementation>
+  <c:set var="case" value="#{cc.attrs.case}" />
+  
+  <h:panelGroup rendered="#{cc.attrs.dataModel.isSelectedColumn('NAME')}">
+    <h:outputText id="#{cc.attrs.caseNameId}" styleClass="case-header-name-cell #{cc.attrs.nameStyleClass} #{cc.attrs.responsiveStyleClass}"
+      value="#{empty case.getName() ? ivy.cms.co('/Dialogs/ch/ivy/addon/portalkit/component/CaseWidget/caseNameNotAvailable') : case.name}" />
+    <h:outputText id="#{cc.attrs.caseDescriptionId}" styleClass="case-header-desc-cell" escape="false" value="#{caseWidgetBean.formatCaseDescription(case.description)}" />  </h:panelGroup>
+</cc:implementation>
+</html>

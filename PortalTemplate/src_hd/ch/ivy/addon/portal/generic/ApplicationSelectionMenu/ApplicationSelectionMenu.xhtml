@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:cc="http://xmlns.jcp.org/jsf/composite" xmlns:ic="http://ivyteam.ch/jsf/component"
+  xmlns:p="http://primefaces.org/ui" xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+  xmlns:pe="http://primefaces.org/ui/extensions" xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+  xmlns:ps="http://primefaces.org/serenity" xmlns:pm="http://primefaces.org/serenity-ivy">
+
+<cc:interface componentType="IvyComponent">
+  <cc:attribute name="onClickTaskMenuItemCallback" />
+  <cc:attribute name="showGlobalSearch" />
+  <cc:attribute name="task" />
+  <cc:attribute name="isWorkingOnATask" type="java.lang.Boolean" />
+</cc:interface>
+
+<cc:implementation>
+  <c:set var="task" value="#{not empty cc.attrs.task ? cc.attrs.task : ivy.task}" />
+  <f:event listener="#{logic.init(cc.attrs.isWorkingOnATask, task)}" type="preRenderComponent" />
+
+  <!-- LOGO  -->
+  <div class="sidebar-logo">
+    <p:commandLink id="logo" action="#{userMenuBean.navigateToHomePageOrDisplayWorkingTaskWarning(data.isWorkingOnATask, task)}" rendered="#{logoBean.hasCorporateLogoImage()}">
+      <p:graphicImage styleClass="portal-home-logo" value="#{resource['ivy-cms:images/logo/CorporateLogo']}" alt="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/homeLogo')}" />
+    </p:commandLink>
+
+    <p:commandLink id="svg-logo" action="#{userMenuBean.navigateToHomePageOrDisplayWorkingTaskWarning(data.isWorkingOnATask, task)}" rendered="#{!logoBean.hasCorporateLogoImage()}">
+      <p:graphicImage styleClass="portal-home-logo" value="#{resource['ivy-cms:images/logo/CorporateLogoSvg']}" alt="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/homeLogo')}" />
+    </p:commandLink>
+
+    <p:commandLink id="logo-small" action="#{userMenuBean.navigateToHomePageOrDisplayWorkingTaskWarning(data.isWorkingOnATask, task)}" styleClass="portal-home-logo-small"
+      rendered="#{logoBean.hasSmallCorporateLogoImage()}">
+      <p:graphicImage styleClass="portal-home-logo portal-home-logo-small" value="#{resource['ivy-cms:images/logo/SmallCorporateLogo']}" 
+        alt="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/homeLogo')}" />
+    </p:commandLink>
+
+    <p:commandLink id="svg-logo-small" action="#{userMenuBean.navigateToHomePageOrDisplayWorkingTaskWarning(data.isWorkingOnATask, task)}" styleClass="portal-home-logo-small"
+      rendered="#{!logoBean.hasSmallCorporateLogoImage()}">
+      <p:graphicImage styleClass="portal-home-logo portal-home-logo-small" value="#{resource['ivy-cms:images/logo/SmallCorporateLogoSvg']}" 
+        alt="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/homeLogo')}" />
+    </p:commandLink>
+
+    <p:commandLink id="toggle-menu" styleClass="sidebar-anchor" global="false" onclick="hideBreadcrumb()" oncomplete="Portal.updateBreadcrumb();" />
+  </div>
+
+  <!-- APPLICATION MENU -->
+  <h:panelGroup id="main-navigator-container" layout="block" styleClass="nano">
+    <div id="#{cc.clientId}" class="nano-content sidebar-scroll-content">
+      <div class="layout-menu-container">
+        <div class="ui-xl-hidden ui-lg-hidden mobile-global-search-container">
+          <h:form id="global-search-component-mobile-form" prependId="false" rendered="#{cc.attrs.showGlobalSearch}">
+            <ic:ch.ivy.addon.portal.generic.GlobalSearchLeftMenu id="global-search-component-mobile" />
+          </h:form>
+        </div>
+
+        <!-- Application menu -->
+        <h:form id="main-navigator">
+          <!-- Portal Main Menu -->
+          <pm:menu id="main-menu" widgetVar="main-menu" model="#{menuView.mainMenuModel}" />
+
+          <!-- Remote commands for breadcrumb -->
+          <p:remoteCommand name="navigateToTaskListFromBreadcrumb" immediate="true"
+            actionListener="#{logic.clickBreadcrumb('TASK')}"
+            oncomplete="PF('task-losing-confirmation-dialog').show();" />
+          <p:remoteCommand name="navigateToHomeFromBreadcrumb" immediate="true"
+            actionListener="#{logic.clickBreadcrumb('HOME')}"
+            oncomplete="PF('task-losing-confirmation-dialog').show();" />
+        </h:form>
+      </div>
+    </div>
+
+    <!-- Add a nano scrollbar of serenity style -->
+    <div class="nano-pane">
+      <div class="nano-slider" />
+    </div>
+  </h:panelGroup>
+
+  <p:dialog id="task-leave-warning-dialog" rendered="#{data.isWorkingOnATask}" 
+    header="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/confirmation')}" modal="true"
+    widgetVar="task-losing-confirmation-dialog" appendTo="@(body)" closeOnEscape="true" responsive="true">
+    <p:ajax event="close" listener="#{logic.continueWorkingOnTask}" global="false" immediate="true"/>
+    <h:form prependId="false">
+        <span class="ui-icon ui-icon-alert ui-confirm-dialog-severity"></span>
+        <h:outputText escape="false" styleClass="ui-confirm-dialog-message"
+        value="#{ivy.cms.co(task.state == 'CREATED' ? '/ch.ivy.addon.portalkit.ui.jsf/taskWarning/createdTaskLeave' : '/ch.ivy.addon.portalkit.ui.jsf/taskWarning/resetParkTaskBeforeLeave')}" />
+        <h:panelGroup layout="block" styleClass="ui-dialog-footer u-no-padding-right">
+          <p:commandLink onclick="PF('task-losing-confirmation-dialog').hide();" actionListener="#{logic.continueWorkingOnTask}"
+            value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/cancel')}" process="@this" update="@none" />
+          <p:spacer width="15px" />
+          <p:commandButton id="reserve-task-button" actionListener="#{logic.reserveTask(task)}" process="@this" update="@none"
+            icon="#{visibilityBean.generateButtonIcon('si si-touch-finger_1')}"
+            value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/reserve')}"
+            styleClass="u-mar-right-5 secondary-btn" rendered="#{task.state != 'CREATED'}" />
+          <p:commandButton id="leave-button" actionListener="#{logic.leave(task)}" process="@this" update="@none"
+            icon="#{visibilityBean.generateButtonIcon('si si-arrow-left')}"
+            value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/leave')}"
+            styleClass="u-mar-right-5" />
+          <p:tooltip for="reserve-task-button" trackMouse="true" rendered="#{task.state != 'CREATED'}"
+            value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/leaveAndReserve')}" />
+        </h:panelGroup>
+    </h:form>
+  </p:dialog>
+  <script type="text/javascript">
+    function hideBreadcrumb() {
+      if ($(".layout-wrapper-static").length == 0) {
+        $("#top-menu").find("> li.breadcrumb-container").css("display", "none");	
+      }
+    }
+  </script>
+</cc:implementation>
+</html>

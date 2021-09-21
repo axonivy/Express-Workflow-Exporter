@@ -1,0 +1,122 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:cc="http://xmlns.jcp.org/jsf/composite" xmlns:ic="http://ivyteam.ch/jsf/component"
+  xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+  xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+<cc:interface componentType="IvyComponent">
+  <cc:attribute name="task" type="ch.ivyteam.ivy.workflow.ITask" />
+  <cc:attribute name="componentToUpdate" />
+</cc:interface>
+
+<cc:implementation>
+  <c:set var="task" value="#{cc.attrs.task}" />
+  <f:event listener="#{logic.initData(task)}" type="preRenderComponent" />
+  <p:growl id="task-document-global-messages" for="task-document-global-messages" />
+
+  <div id="#{cc.clientId}" class="task-details-item-document ui-g">
+    <h:form id="task-document-form" prependId="false" styleClass="ui-g-12 u-padding-0">
+      <div class="task-detail-section-title ui-g-12">
+        <div class="task-details-document-title ui-g-6 u-truncate-text u-padding-0 task-details-panel-title">
+          <i class="si si-common-file-text" /> #{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/taskDetails/documents')}
+        </div>
+        <h:panelGroup layout="block" styleClass="task-details-document-add ui-g-6 u-padding-0">
+          <p:commandLink id="add-document-command" styleClass="task-details-document-add-link"
+            rendered="#{!(data.businessCase.state eq 'DONE' and data.isHideUploadDocumentForDoneCase) and taskActionBean.canWriteDocument(data.task)}"
+            actionListener="#{data.setTask(task)}" oncomplete="PF('document-upload-dialog').show()">
+            <span class="si si-common-file-add" />
+            <span class="display-full-text">#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/addDocument')}</span>
+            <span class="display-short-text">#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/add')}</span>
+          </p:commandLink>
+        </h:panelGroup>
+      </div>
+
+      <div class="ui-g-12 u-padding-0">
+        <p:dataTable id="task-details-documents" var="document" rendered="#{not empty data.documents}" value="#{data.documents}" paginator="true" paginatorAlwaysVisible="false" pageLinks="3"
+          rows="8" paginatorPosition="bottom" emptyMessage="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/noRecordsFound')}"
+          paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+          currentPageReportTemplate="{currentPage} #{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/noteHistory/curentReportOf')} {totalPages}">
+          <p:column headerText="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/documentFiles/name')}" sortBy="#{document.name}"
+            styleClass="u-truncate-text">
+            <h:panelGroup layout="block" rendered="#{document ne null}" styleClass="task-document-name">
+              <p:commandLink ajax="false" id="download" styleClass="download-command task-document-name-text u-truncate-text">
+                <p:fileDownload value="#{logic.downloadDocument(document)}" />
+                <ic:ch.ivy.addon.portalkit.component.document.DocumentNameWithIcon fileName="#{document.name}" fileSize="#{masterDataBean.getReadableFileSize(document.size)}"
+                  symbolStyleClass="task-details-document-download-icon"
+                  fileNameStyleClass="document-name"
+                  fileSizeStyleClass="document-size" />
+              </p:commandLink>
+              <p:commandLink id="delete-file" actionListener="#{data.setDocument(document)}"
+                rendered="#{!(data.businessCase.state eq 'DONE' and data.isHideUploadDocumentForDoneCase) and taskActionBean.canWriteDocument(data.task)}"
+                styleClass="si si-remove Fright task-document-download" oncomplete="PF('document-deletion-dialog').show()">
+                <p:tooltip for="delete-file" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/taskDetails/deleteFile')} #{document.name}"
+                  trackMouse="true" hideEvent="mouseleave click"/>
+              </p:commandLink>
+            </h:panelGroup>
+          </p:column>
+
+          <p:column id="document-author" headerText="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/author')}"
+            styleClass="task-document-author u-truncate-text ui-sm-hidden"
+            sortBy="#{securityMemberDisplayNameFormatBean.generateBriefDisplayNameForSecurityMember(document.creation.user, document.creation.user.name)}">
+            <h:outputText value="#{securityMemberDisplayNameFormatBean.generateBriefDisplayNameForSecurityMember(document.creation.user, document.creation.user.name)}" />
+          </p:column>
+
+          <p:column headerText="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/creationDate')}" styleClass="task-history-date u-truncate-text ui-sm-hidden"
+            sortBy="#{document.creation.timestamp}">
+            <h:outputText value="#{document.creation.timestamp}">
+              <f:convertDateTime pattern="#{dateTimePatternBean.configuredPattern}" locale="#{localeBean.locale}"/>
+            </h:outputText>
+          </p:column>
+        </p:dataTable>
+        <h:panelGroup layout="block" styleClass="ui-g-12 no-item-panel" rendered="#{empty data.documents}">
+          <i class="si si-information-circle" />
+          <h:outputText styleClass="no-item-header" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/noDocumentAvailable')}" />
+          <h:outputText styleClass="no-item-detail" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/pleaseAddDocument')}"
+            rendered="#{!(data.businessCase.state eq 'DONE' and data.isHideUploadDocumentForDoneCase) and taskActionBean.canWriteDocument(data.task)}" />
+        </h:panelGroup>
+      </div>
+    </h:form>
+  </div>
+
+  <p:dialog id="document-upload-dialog" widgetVar="document-upload-dialog" appendTo="@(body)" dynamic="true" styleClass="document-upload-dialog"
+    header="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/addDocument')}" modal="true" resizable="false" showEffect="fade" hideEffect="fade"
+    responsive="true">
+    <h:form id="document-upload-form">
+      <p:messages id="upload-messages" />
+      <h:outputText value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/taskDetails/addDocumentHelpText')}" />
+      <p:fileUpload styleClass="document-upload" id="document-upload-panel" fileUploadListener="#{logic.uploadDocument}" mode="advanced" 
+        chooseIcon="#{visibilityBean.generateButtonIcon('si si-add-small')}"
+        dragDropSupport="true" label="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/select')}"
+        auto="true" multiple="true" sizeLimit="#{masterDataBean.fileUploadSizeLimit}"
+        invalidSizeMessage="#{masterDataBean.getFileUploadInvalidSizeMessage()}"
+        update="upload-messages #{p:component('task-document-form')} #{cc.attrs.componentToUpdate}" />
+    </h:form>
+    <f:facet name="footer">
+      <p:commandButton id="document-upload-close-command" type="button" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/close')}"
+        icon="#{visibilityBean.generateButtonIcon('si si-remove')}" onclick="PF('document-upload-dialog').hide();" />
+    </f:facet>
+    <p:ajax event="close" global="false" listener="#{logic.resetMessageUploadDocument}" update="#{p:component('upload-messages')}" />
+  </p:dialog>
+
+  <ui:decorate template="/layouts/decorator/portal-dialog-with-icon.xhtml">
+    <ui:param name="id" value="document-deletion-dialog" />
+    <ui:param name="widgetVar" value="document-deletion-dialog" />
+    <ui:param name="appendTo" value="@(body)" />
+    <ui:param name="iconClass" value="si si-delete-1" />
+    <ui:param name="iconStyleClass" value="portal-dialog-error-icon" />
+    <ui:param name="headerText" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/deleteDocumentHeaderText')}" />
+    <ui:param name="dialogContent" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/confirmForDelete')}" />
+    
+    <ui:define name="dialogFooter">
+      <p:commandLink id="document-deletion-cancellation-command" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/cancel')}"
+        process="@this" onsuccess="PF('document-deletion-dialog').hide()" styleClass="u-mar-right-15"/>
+      <p:commandButton id="document-deletion-command" value="#{ivy.cms.co('/ch.ivy.addon.portalkit.ui.jsf/common/delete')}" process="@this"
+        icon="#{visibilityBean.generateButtonIcon('si si-remove')}"
+        update="#{p:component('task-document-form')} #{cc.attrs.componentToUpdate} #{p:component('task-document-global-messages')}"
+        actionListener="#{logic.deleteDocument}" oncomplete="PF('document-deletion-dialog').hide();" />
+    </ui:define>
+  </ui:decorate>
+
+  <h:outputScript name="task-item-document.js" library="js" />
+</cc:implementation>
+</html>

@@ -1,0 +1,46 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://xmlns.jcp.org/jsf/core"
+  xmlns:h="http://xmlns.jcp.org/jsf/html" xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+  xmlns:cc="http://xmlns.jcp.org/jsf/composite" xmlns:ic="http://ivyteam.ch/jsf/component"
+  xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+  xmlns:c="http://xmlns.jcp.org/jsp/jstl/core" xmlns:jsf="http://xmlns.jcp.org/jsf">
+
+<cc:interface componentType="IvyComponent">
+  <cc:attribute name="case" type="ch.ivyteam.ivy.workflow.ICase" />
+  <cc:attribute name="itemStyleClass" />
+  <cc:attribute name="update" default="" required="false" />
+  <cc:attribute name="onDestroyComplete" />
+  <cc:attribute name="enableCaseAction" default="true" />
+  <cc:attribute name="canDestroyCase" default="true" />
+  <cc:attribute name="rowIndex" />
+  <cc:attribute name="readOnly" default="false" />
+  <cc:attribute name="inFrame" default="false" />
+  <cc:facet name="caseHeader" shortDescription="Header content of one case item" />
+</cc:interface>
+
+<cc:implementation>
+
+  <c:set var="case" value="#{cc.attrs.case}" />
+  <c:set var="rowIndex" value="#{cc.attrs.rowIndex}" />
+  <c:set var="renderDestroyAction" value="#{caseActionBean.canDestroy(case) and case.state ne 'DONE' and case.state ne 'DESTROYED' and cc.attrs.canDestroyCase}" />
+
+  <div id="#{cc.clientId}" class="js-case-item case-list-item #{cc.attrs.itemStyleClass}">
+    <h:panelGroup id="case-item-container" styleClass="case-header-container case-header-data" layout="block">
+      <h:panelGroup id="case-info-row" styleClass="case-info-row js-case-start-link">
+        <p:ajax event="click" listener="#{logic.openDetails(case, cc.attrs.inFrame)}" />
+        <cc:renderFacet name="caseHeader" />
+      </h:panelGroup>
+
+      <h:form id="case-item-action-form" styleClass="case-header-action-cell">
+        <h:panelGroup styleClass="u-hidden-sm-down action-container" rendered="#{cc.attrs.enableCaseAction and !cc.attrs.readOnly}">
+          <ic:ch.ivy.addon.portalkit.component.ActionStep id="action-step-component" actionLinkId="action-steps-menu"
+            actionLinkStyleClass="ui-button-text-only" panelWidgetVar="case-action-steps-panel-#{rowIndex}" isAdhocExcluded="true"
+            renderDestroyAction="#{renderDestroyAction}" update="#{cc.attrs.update}" onDestroyComplete="#{cc.attrs.onDestroyComplete}"
+            case="#{cc.attrs.case}" readOnly="#{cc.attrs.readOnly}" />
+        </h:panelGroup>
+       </h:form>
+
+    </h:panelGroup>
+
+  </div>
+</cc:implementation>
+</html>
