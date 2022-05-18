@@ -8,7 +8,7 @@
   <properties>
     <build.plugin.version>9.3.0-SNAPSHOT</build.plugin.version>
     <ivy.engine.version>9.3.0</ivy.engine.version>
-    <quartz.version>2.1.1</quartz.version>
+    <quartz.version>2.3.2</quartz.version>
     <itextpdf.version>5.5.13</itextpdf.version>
     <jsoup.version>1.14.2</jsoup.version>
   </properties>
